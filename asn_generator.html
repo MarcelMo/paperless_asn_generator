@@ -1,0 +1,120 @@
+<html>
+<head>
+<style>
+
+@media print {
+ table.qrcodes tr {
+	page-break-after: always;
+	display: block;
+	position: relative;
+ }
+ body {
+	margin: 0px;
+	padding-left: 8px;
+	padding-right: 0px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+ }
+}
+ 
+
+div.qr {
+	margin-left: 0px;
+	margin-top: 15px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+/*	border: 1px solid black; */
+}
+
+div.qr > img {
+	margin: 2px;
+}
+
+div.qr > span {
+	display: block;
+	font-size: 125%;
+	overflow-wrap: anywhere;
+	max-width:40px;
+	margin-left: 1px;
+	margin-right: 1px;
+}
+
+</style>
+<script>
+var number;
+var endNumber;
+function genBarcodes(startNumber,setEndNumber,sizeX,sizeY,cols)
+{
+	number=startNumber;
+	endNumber=setEndNumber;
+	var table=document.getElementById('qrcodes');
+	var colCount=0;
+	var finished=false;
+	var last=false;
+	var tr=false;
+	do {
+		finished=last;
+		var img=qr(number,sizeX,sizeY);
+		if (!tr) {
+			tr=document.createElement('tr');
+		}
+		var td=document.createElement('td');
+		td.appendChild(img);
+		tr.appendChild(td);
+		colCount+=1;
+		last=!increment(number,endNumber);
+		if (colCount==cols || finished) {
+			table.appendChild(tr);
+			tr=false;
+			colCount=0;
+		}
+	} while (!finished);
+}
+
+function increment(){
+	var p=endNumber.length-1;
+	do {
+		var d=addOne(p);
+	} while (d==10 && (--p) >= 0);
+	return(number!=endNumber);
+}
+
+function addOne(p){
+	var d=parseInt(number.charAt(p));
+	d+=1;
+	number=number.substring(0,p)+(d % 10)+number.substring(p+1);
+	return(d);
+}
+
+function qr(code,sizeX,sizeY){
+	var div=document.createElement('div');
+	div.className='qr';
+	var img=document.createElement('img');
+	img.src="https://api.qrserver.com/v1/create-qr-code/?data="+escape(code)+"&amp;size="+sizeX+"x"+sizeY;
+	img.style.width=sizeX+'px';
+	img.style.height=sizeY+'px';
+	var span=document.createElement('span');
+	span.innerText=code;
+	div.appendChild(img);
+	div.appendChild(span);
+	return(div);
+}
+function init(){
+ const urlParams = new URLSearchParams(window.location.search);
+ const fromNumber = urlParams.get('from');
+ const toNumber = urlParams.get('to');
+ if (!fromNumber) {
+	var div=document.createElement('div');
+	div.innerHTML='<form>From: <input name="from"/><br/>To: <input name="to"/><br/><input type="submit"></form>';
+	document.body.appendChild(div);
+ } else {
+   genBarcodes(fromNumber,toNumber,50,50,2);
+ }
+}
+window.onload=init;
+</script>
+</head>
+<body>
+<table id='qrcodes' class='qrcodes'>
+</table>
+</body>
